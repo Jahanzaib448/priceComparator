@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Comparator - Compare Prices Across Stores</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-tags"></i>
+                <span>PriceComparator</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#home" class="active">Home</a>
+                <a href="#compare">Compare</a>
+                <a href="#history">History</a>
+                <a href="#about">About</a>
+            </div>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Find the Best Prices Across Stores</h1>
+            <p>Compare prices from Amazon, Daraz, PriceOye and more. Save money on every purchase.</p>
+            
+            <!-- Search Box -->
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search for products... (e.g., iPhone, Laptop, Shoes)">
+                    <button id="searchBtn" class="search-btn">
+                        <span>Compare Prices</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Website Filters -->
+                <div class="website-filters">
+                    <label class="filter-label">
+                        <input type="checkbox" class="website-checkbox" value="amazon" checked>
+                        <span class="filter-name">Amazon</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" class="website-checkbox" value="daraz" checked>
+                        <span class="filter-name">Daraz</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" class="website-checkbox" value="priceoye" checked>
+                        <span class="filter-name">PriceOye</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Popular Searches -->
+            <div class="popular-searches">
+                <span>Popular:</span>
+                <button class="popular-tag" data-search="iphone 13">iPhone 13</button>
+                <button class="popular-tag" data-search="samsung s23">Samsung S23</button>
+                <button class="popular-tag" data-search="laptop dell">Dell Laptop</button>
+                <button class="popular-tag" data-search="headphones">Headphones</button>
+                <button class="popular-tag" data-search="smart watch">Smart Watch</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3>Searching Products...</h3>
+            <p>Checking prices across multiple stores</p>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <section class="results-section" id="compare">
+        <div class="container">
+            <!-- Summary Cards -->
+            <div class="summary-cards" id="summaryCards"></div>
+            
+            <!-- Filters -->
+            <div class="results-header">
+                <h2>Search Results <span id="resultsCount"></span></h2>
+                <div class="results-filters">
+                    <select id="sortSelect" class="sort-select">
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating">Rating</option>
+                    </select>
+                    <button class="compare-btn" id="compareBtn">
+                        <i class="fas fa-balance-scale"></i>
+                        Compare Selected (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Products Grid -->
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- History Section -->
+    <section class="history-section" id="history">
+        <div class="container">
+            <h2>Recent Searches</h2>
+            <div class="history-grid" id="historyGrid">
+                <!-- History will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>PriceComparator</h3>
+                    <p>Find the best deals across multiple stores. Save money on every purchase.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <a href="#home">Home</a>
+                    <a href="#compare">Compare</a>
+                    <a href="#history">History</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Follow Us</h3>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 PriceComparator. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
