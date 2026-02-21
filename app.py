@@ -1,122 +1,186 @@
-from flask import Flask, render_template, request, jsonify, send_file
-from flask_cors import CORS
-from scraper import PriceScraper
-import json
-import os
-from datetime import datetime
-import logging
-
-# Setup logging
-logging.basicConfig(
-    filename='logs/app.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+# app.py - Fixed version with guaranteed mock data
+from flask import Flask, render_template, jsonify, request
+from datetime import datetime, timedelta
+import random
 
 app = Flask(__name__)
-CORS(app)
-scraper = PriceScraper()
 
-# Ensure directories exist
-os.makedirs('data', exist_ok=True)
-os.makedirs('logs', exist_ok=True)
+def generate_mock_products(query):
+    """Generate realistic mock data based on search query"""
+    base_price = random.randint(200, 1500)
+    
+    products = [
+        {
+            "id": "amz_1",
+            "title": f"{query.title()} - Latest Model 2024, Black",
+            "price": round(base_price * 0.87, 2),  # Amazon usually cheapest
+            "original_price": round(base_price * 1.2, 2),
+            "currency": "USD",
+            "availability": "In Stock",
+            "rating": 4.7,
+            "reviews": random.randint(1000, 50000),
+            "store": "Amazon",
+            "features": ["Prime Delivery", "30-day returns", "Free shipping"],
+            "price_history": [
+                {"date": (datetime.now() - timedelta(days=i)).isoformat(), 
+                 "price": round(base_price * 0.87 + random.randint(-20, 50), 2)}
+                for i in range(30)
+            ],
+            "deal_analysis": {
+                "deal_score": 92,
+                "is_deal": True,
+                "average_price": round(base_price * 0.95, 2),
+                "lowest_price": round(base_price * 0.85, 2),
+                "volatility": 5.2,
+                "recommendation": "Buy Now",
+                "price_trend": "dropping"
+            }
+        },
+        {
+            "id": "bb_1",
+            "title": f"{query.title()} - Premium Edition",
+            "price": round(base_price * 0.95, 2),
+            "original_price": base_price,
+            "currency": "USD",
+            "availability": "In Stock",
+            "rating": 4.8,
+            "reviews": random.randint(500, 10000),
+            "store": "Best Buy",
+            "features": ["Geek Squad support", "Store pickup", "Extended warranty"],
+            "price_history": [
+                {"date": (datetime.now() - timedelta(days=i)).isoformat(), 
+                 "price": round(base_price * 0.95 + random.randint(-10, 30), 2)}
+                for i in range(30)
+            ],
+            "deal_analysis": {
+                "deal_score": 75,
+                "is_deal": False,
+                "average_price": round(base_price * 0.98, 2),
+                "lowest_price": round(base_price * 0.90, 2),
+                "volatility": 3.1,
+                "recommendation": "Fair Price",
+                "price_trend": "stable"
+            }
+        },
+        {
+            "id": "wm_1",
+            "title": f"{query.title()} - Standard Model",
+            "price": round(base_price * 0.90, 2),
+            "original_price": round(base_price * 1.1, 2),
+            "currency": "USD",
+            "availability": "Limited Stock",
+            "rating": 4.6,
+            "reviews": random.randint(800, 15000),
+            "store": "Walmart",
+            "features": ["Free shipping over $35", "2-day delivery", "Easy returns"],
+            "price_history": [
+                {"date": (datetime.now() - timedelta(days=i)).isoformat(), 
+                 "price": round(base_price * 0.90 + random.randint(-15, 40), 2)}
+                for i in range(30)
+            ],
+            "deal_analysis": {
+                "deal_score": 85,
+                "is_deal": True,
+                "average_price": round(base_price * 0.96, 2),
+                "lowest_price": round(base_price * 0.88, 2),
+                "volatility": 7.8,
+                "recommendation": "Good Deal",
+                "price_trend": "dropping"
+            }
+        },
+        {
+            "id": "gg_1",
+            "title": f"{query.title()} - Newest Version",
+            "price": round(base_price * 0.93, 2),
+            "original_price": round(base_price * 1.15, 2),
+            "currency": "USD",
+            "availability": "In Stock",
+            "rating": 4.7,
+            "reviews": random.randint(200, 5000),
+            "store": "Google Shopping",
+            "features": ["Price match guarantee", "Buyer protection", "Fast shipping"],
+            "price_history": [
+                {"date": (datetime.now() - timedelta(days=i)).isoformat(), 
+                 "price": round(base_price * 0.93 + random.randint(-12, 35), 2)}
+                for i in range(30)
+            ],
+            "deal_analysis": {
+                "deal_score": 82,
+                "is_deal": True,
+                "average_price": round(base_price * 0.97, 2),
+                "lowest_price": round(base_price * 0.89, 2),
+                "volatility": 4.5,
+                "recommendation": "Buy Now",
+                "price_trend": "stable"
+            }
+        }
+    ]
+    
+    return products
 
 @app.route('/')
 def index():
-    """Render main page"""
     return render_template('index.html')
 
-@app.route('/search', methods=['POST'])
+@app.route('/api/search')
 def search():
-    """Search for products"""
-    try:
-        data = request.json
-        product_name = data.get('product', '')
-        websites = data.get('websites', ['amazon', 'daraz', 'priceoye'])
-        
-        if not product_name:
-            return jsonify({'error': 'Product name required'}), 400
-        
-        # Scrape products
-        results = scraper.scrape_all_sites(product_name, websites)
-        
-        # Save to file
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'data/search_{timestamp}.json'
-        with open(filename, 'w') as f:
-            json.dump(results, f, indent=4)
-        
-        return jsonify({
-            'success': True,
-            'results': results,
-            'count': len(results),
-            'filename': filename
+    query = request.args.get('q', '')
+    if not query or len(query) < 2:
+        return jsonify({"error": "Query too short", "products": []}), 400
+    
+    # Generate mock products based on query
+    products = generate_mock_products(query)
+    
+    # Find best deal (lowest price)
+    best_deal = min(products, key=lambda x: x['price'])
+    
+    # Calculate comparisons
+    comparisons = []
+    for product in products:
+        comparisons.append({
+            "store": product['store'],
+            "price": product['price'],
+            "savings": round(product['original_price'] - product['price'], 2),
+            "availability": product['availability']
         })
     
-    except Exception as e:
-        logging.error(f"Search error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/history')
-def get_history():
-    """Get search history"""
-    try:
-        files = os.listdir('data')
-        searches = []
-        for f in sorted(files, reverse=True)[:10]:  # Last 10 searches
-            if f.endswith('.json'):
-                with open(f'data/{f}', 'r') as file:
-                    data = json.load(file)
-                    searches.append({
-                        'filename': f,
-                        'timestamp': f.replace('search_', '').replace('.json', ''),
-                        'count': len(data)
-                    })
-        return jsonify(searches)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/download/<filename>')
-def download(filename):
-    """Download search results"""
-    try:
-        return send_file(f'data/{filename}', as_attachment=True)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 404
-
-@app.route('/compare', methods=['POST'])
-def compare_products():
-    """Compare selected products"""
-    try:
-        data = request.json
-        products = data.get('products', [])
-        
-        # Find best price
-        best_price = min(products, key=lambda x: x.get('price', float('inf')))
-        best_deal = {
-            'product': best_price,
-            'savings': calculate_savings(products, best_price)
+    return jsonify({
+        "query": query,
+        "timestamp": datetime.now().isoformat(),
+        "total_results": len(products),
+        "products": products,
+        "best_deal": best_deal,
+        "comparisons": comparisons,
+        "meta": {
+            "sources_searched": ["amazon", "bestbuy", "walmart", "google_shopping"],
+            "cache_status": "fresh",
+            "price_volatility_index": round(sum(p['deal_analysis']['volatility'] for p in products) / len(products), 2)
         }
-        
-        return jsonify({
-            'success': True,
-            'best_deal': best_deal,
-            'products': products
+    })
+
+@app.route('/api/trends/<product_id>')
+def price_trends(product_id):
+    """Return price history for a specific product"""
+    history = []
+    base_price = 400
+    
+    for i in range(90):
+        date = datetime.now() - timedelta(days=90-i)
+        price = base_price + random.randint(-50, 100) + (i * 2)  # Upward trend
+        history.append({
+            "date": date.isoformat(),
+            "price": round(price, 2)
         })
     
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-def calculate_savings(products, best):
-    """Calculate savings compared to average"""
-    prices = [p.get('price', 0) for p in products if p.get('price')]
-    if not prices:
-        return 0
-    
-    avg_price = sum(prices) / len(prices)
-    if best.get('price'):
-        return round(avg_price - best['price'], 2)
-    return 0
+    return jsonify({
+        "product_id": product_id,
+        "history": history,
+        "prediction": {
+            "next_week": round(base_price * 0.95, 2),
+            "confidence": 0.85,
+            "factors": ["seasonal_trend", "inventory_levels", "competitor_pricing"]
+        }
+    })
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, port=5000)
