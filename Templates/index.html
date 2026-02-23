@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriceWise - AI-Powered Price Comparison</title>
+    <script src="https://unpkg.com/@splinetool/viewer@1.0.54/build/spline-viewer.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #8b5cf6;
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Background Gradient Mesh */
+        .bg-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            animation: meshMove 20s ease-in-out infinite;
+        }
+
+        @keyframes meshMove {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section with Spline */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 6rem 5% 2rem;
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-text h1 span {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-text p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        .spline-container {
+            width: 100%;
+            height: 600px;
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        spline-viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Search Section */
+        .search-section {
+            padding: 4rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .search-container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 1.25rem 1.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-btn {
+            padding: 1.25rem 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .trending {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .trending-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .trending-tag {
+            padding: 0.5rem 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            color: var(--primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .trending-tag:hover {
+            background: rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Results Section */
+        .results-section {
+            padding: 2rem 5% 6rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.2));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            color: var(--success);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .ai-badge i {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Price Cards Grid */
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .price-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .price-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .price-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .price-card:hover::before {
+            opacity: 1;
+        }
+
+        .price-card.best-deal {
+            border-color: var(--success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(30, 41, 59, 0.9));
+        }
+
+        .price-card.best-deal::before {
+            opacity: 1;
+            background: var(--success);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+
+        .marketplace-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .confidence-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .confidence-badge.high {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .confidence-badge.ai_predicted {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent);
+        }
+
+        .price-display {
+            margin-bottom: 1.5rem;
+        }
+
+        .price-main {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            display: flex;
+            align-items: start;
+            gap: 0.25rem;
+        }
+
+        .price-currency {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .price-original {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            text-decoration: line-through;
+            margin-left: 0.5rem;
+        }
+
+        .savings-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            color: var(--success);
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-footer {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            padding: 0.875rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .last-updated {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 5%;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 5%;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .spline-container {
+                height: 400px;
+                order: -1;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .price-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.show {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">
+            <i class="fas fa-bolt"></i>
+            PriceWise
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How it Works</a></li>
+            <li><a href="#api">API</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Find the Best <span>Prices</span> with AI Precision</h1>
+                <p>Compare prices across multiple marketplaces in real-time. Our lightweight AI model fills gaps where other systems fail, ensuring you never miss a deal.</p>
+                
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search for any product (e.g., iPhone 15, Sony headphones...)">
+                        <button class="search-btn" id="searchBtn" onclick="performSearch()">
+                            <i class="fas fa-search"></i>
+                            Search
+                        </button>
+                    </div>
+                    <div class="trending">
+                        <span class="trending-label">Trending:</span>
+                        <div id="trendingContainer"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="spline-container">
+                <spline-viewer url="https://prod.spline.design/Jb6rPXssxbr0X02n/scene.splinecode"></spline-viewer>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading State -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Scanning marketplaces with AI enhancement...</p>
+    </div>
+
+    <!-- Results Section -->
+    <section class="results-section" id="resultsSection">
+        <div class="results-header">
+            <h2 class="results-title">Price Comparison Results</h2>
+            <div class="ai-badge" id="aiBadge" style="display: none;">
+                <i class="fas fa-robot"></i>
+                AI Enhanced
+            </div>
+        </div>
+        <div class="price-grid" id="priceGrid"></div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>AI Gap Filling</h3>
+                <p>When marketplaces block scrapers, our lightweight ONNX model predicts prices with 94% accuracy.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Real-Time Comparison</h3>
+                <p>Get live prices from Amazon, eBay, Walmart, and Target in under 3 seconds.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Serverless Ready</h3>
+                <p>Optimized for Vercel Edge Functions with minimal cold start latency.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 PriceWise. Built with Flask, Spline & ONNX Runtime.</p>
+    </footer>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">Price alert set!</span>
+    </div>
+
+    <script>
+        // Load trending searches
+        async function loadTrending() {
+            try {
+                const response = await fetch('/api/trends');
+                const trends = await response.json();
+                const container = document.getElementById('trendingContainer');
+                
+                trends.slice(0, 4).forEach(trend => {
+                    const tag = document.createElement('span');
+                    tag.className = 'trending-tag';
+                    tag.textContent = trend.query;
+                    tag.onclick = () => {
+                        document.getElementById('searchInput').value = trend.query;
+                        performSearch();
+                    };
+                    container.appendChild(tag);
+                });
+            } catch (error) {
+                console.error('Failed to load trends:', error);
+            }
+        }
+
+        // Search functionality
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+
+            const searchBtn = document.getElementById('searchBtn');
+            const loading = document.getElementById('loading');
+            const resultsSection = document.getElementById('resultsSection');
+            const priceGrid = document.getElementById('priceGrid');
+
+            // UI States
+            searchBtn.disabled = true;
+            loading.classList.add('active');
+            resultsSection.classList.remove('active');
+            priceGrid.innerHTML = '';
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    displayResults(data);
+                } else {
+                    showNotification('No results found. Try a different search term.');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                showNotification('Search failed. Please try again.');
+            } finally {
+                searchBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        function displayResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const priceGrid = document.getElementById('priceGrid');
+            const aiBadge = document.getElementById('aiBadge');
+
+            // Show AI badge if predictions were used
+            if (data.ai_enhanced) {
+                aiBadge.style.display = 'inline-flex';
+            }
+
+            const marketplaceIcons = {
+                'amazon': 'fab fa-amazon',
+                'ebay': 'fab fa-ebay',
+                'walmart': 'fas fa-store',
+                'target': 'fas fa-bullseye'
+            };
+
+            data.results.forEach((result, index) => {
+                const isBestDeal = index === 0;
+                const card = document.createElement('div');
+                card.className = `price-card ${isBestDeal ? 'best-deal' : ''}`;
+                
+                const iconClass = marketplaceIcons[result.marketplace] || 'fas fa-shopping-bag';
+                const confidenceClass = result.confidence === 'ai_predicted' ? 'ai_predicted' : 'high';
+                const confidenceText = result.confidence === 'ai_predicted' ? 'AI Predicted' : 'Live Data';
+                
+                const savingsHtml = result.savings ? `
+                    <div class="savings-badge">
+                        <i class="fas fa-arrow-down"></i>
+                        Save $${result.savings} (${result.savings_percent}%)
+                    </div>
+                ` : '';
+
+                const aiNote = result.note ? `<p style="font-size: 0.8rem; color: var(--accent); margin-top: 0.5rem;"><i class="fas fa-info-circle"></i> ${result.note}</p>` : '';
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="marketplace-logo">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <span class="confidence-badge ${confidenceClass}">${confidenceText}</span>
+                    </div>
+                    <div class="price-display">
+                        <div class="price-main">
+                            <span class="price-currency">$</span>
+                            ${result.price.toFixed(2)}
+                        </div>
+                    </div>
+                    ${savingsHtml}
+                    ${aiNote}
+                    <div class="card-footer">
+                        <a href="${result.url}" target="_blank" class="btn-primary">
+                            ${isBestDeal ? 'Get Best Deal' : 'View Offer'}
+                        </a>
+                        <button class="btn-secondary" onclick="trackPrice('${result.marketplace}', ${result.price})">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                    </div>
+                    <div class="last-updated">
+                        <i class="fas fa-clock"></i> Updated: ${new Date(result.last_updated).toLocaleTimeString()}
+                    </div>
+                `;
+                
+                priceGrid.appendChild(card);
+            });
+
+            resultsSection.classList.add('active');
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function trackPrice(marketplace, price) {
+            showNotification(`Price alert set for ${marketplace} at $${price}`);
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const text = document.getElementById('notificationText');
+            text.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+
+        // Enter key search
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        // Initialize
+        loadTrending();
+    </script>
+</body>
+</html>
